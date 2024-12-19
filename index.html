@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Quotes</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash/4.17.21/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pulltorefreshjs/0.1.22/index.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            overscroll-behavior-y: contain;
+        }
+        .quote-text {
+            font-family: 'Dancing Script', cursive;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .quote-text.visible {
+            opacity: 1;
+        }
+        .cursor {
+            border-right: 2px solid #fff;
+            animation: blink 0.75s step-end infinite;
+        }
+        @keyframes blink {
+            from, to { border-color: transparent }
+            50% { border-color: #fff; }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-4xl w-full">
+        <div id="quote-container" class="relative text-center">
+            <div class="quote-wrapper relative inline-block">
+                <p id="quote" class="quote-text mb-4 leading-relaxed"></p>
+                <button id="info-button" class="hidden ml-2 p-2 rounded-full hover:bg-gray-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+            </div>
+            <p id="explanation" class="hidden mt-6 text-gray-400 text-lg"></p>
+        </div>
+    </div>
+
+    <script>
+        const quotes = [
+            { 
+                text: "I’m surrounded by idiots",
+            },
+            { 
+                text: "Dag patatjes",
+            },
+            {
+                text: "Het kan beter van de stad dan van de dorp komen"
+            },
+            {
+                text: "Met Paul Willekens hier, dag omatje!",
+            },
+            {
+                text: "Dat is hier een groepsbevorderende activiteit",
+            },
+            {
+                text: "Only the good die young",
+            },
+            {
+                text: "Onkruid vergaat niet",
+            },
+            {
+                text: "Geld moet rollen",
+            },
+            {
+                text: "Daar zijn papa’s voor",
+            },
+            {
+                text: "Werk gaat voor het meiske",
+            },
+            {
+                text: "Als je gaat zoeken, moet je eerst het licht aan doen",
+            },
+            {
+                text: "Buongiorno principessa!",
+            },
+            {
+                text: "De vuildbak is je beste vriend",
+            }
+        ];
+
+        const quoteElement = document.getElementById('quote');
+        const explanationElement = document.getElementById('explanation');
+        const infoButton = document.getElementById('info-button');
+        
+        function calculateOptimalFontSize(text) {
+            const container = document.getElementById('quote-container');
+            const testElement = document.createElement('span');
+            testElement.style.fontFamily = 'Dancing Script, cursive';
+            testElement.style.visibility = 'hidden';
+            testElement.style.position = 'absolute';
+            testElement.style.whiteSpace = 'nowrap';
+            testElement.textContent = `"${text}"`;
+            document.body.appendChild(testElement);
+            
+            let fontSize = 50;
+            const maxWidth = container.offsetWidth * 0.8;
+            const maxHeight = container.offsetHeight * 0.8;
+            
+            while (fontSize < 120) {
+                testElement.style.fontSize = fontSize + 'px';
+                if (testElement.offsetWidth > maxWidth || testElement.offsetHeight > maxHeight) {
+                    break;
+                }
+                fontSize += 1;
+            }
+            
+            document.body.removeChild(testElement);
+            return fontSize - 1;
+        }
+
+        async function typeWriter(element, text, fontSize, speed = 50) {
+            element.style.fontSize = `${fontSize}px`;
+            element.innerHTML = '"';
+            const cursor = document.createElement('span');
+            cursor.className = 'cursor';
+            element.appendChild(cursor);
+            element.classList.add('visible');
+
+            for (let i = 0; i < text.length; i++) {
+                await new Promise(resolve => setTimeout(resolve, speed));
+                cursor.remove();
+                element.innerHTML = '"' + text.substring(0, i + 1);
+                element.appendChild(cursor);
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, speed));
+            cursor.remove();
+            element.innerHTML = '"' + text + '"';
+        }
+
+        async function displayRandomQuote() {
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            quoteElement.classList.remove('visible');
+            infoButton.classList.add('hidden');
+            explanationElement.classList.add('hidden');
+            
+            const fontSize = calculateOptimalFontSize(randomQuote.text);
+            await typeWriter(quoteElement, randomQuote.text, fontSize);
+            
+            if (randomQuote.explanation) {
+                infoButton.classList.remove('hidden');
+                infoButton.onclick = () => {
+                    explanationElement.classList.toggle('hidden');
+                };
+                explanationElement.textContent = randomQuote.explanation;
+            }
+        }
+
+        // Initialize pull-to-refresh
+        PullToRefresh.init({
+            mainElement: 'body',
+            onRefresh() {
+                displayRandomQuote();
+            }
+        });
+
+        // Display initial quote
+        displayRandomQuote();
+
+        // Recalculate on window resize
+        window.addEventListener('resize', () => {
+            const currentText = quoteElement.textContent.slice(1, -1); // Remove quotes
+            const fontSize = calculateOptimalFontSize(currentText);
+            quoteElement.style.fontSize = `${fontSize}px`;
+        });
+    </script>
+</body>
+</html>
