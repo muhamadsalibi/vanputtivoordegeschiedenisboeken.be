@@ -3,15 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Quotes</title>
+    <title>Als Putti het zegt dan moet je het opschrijven</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash/4.17.21/lodash.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pulltorefreshjs/0.1.22/index.umd.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            overscroll-behavior-y: contain;
-        }
         .quote-text {
             font-family: 'Dancing Script', cursive;
             opacity: 0;
@@ -31,15 +27,26 @@
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen flex items-center justify-center p-4">
+    <button id="refresh-button" class="fixed top-4 left-4 p-3 rounded-full hover:bg-gray-700 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+    </button>
+    <button id="info-button" class="fixed top-4 right-16 p-3 rounded-full hover:bg-gray-700 transition-colors hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    </button>
+    <button onclick="window.open('https:\/\/forms.gle/qouGdDgJZ9cCsXA99', '_blank')" class="fixed top-4 right-4 p-3 rounded-full hover:bg-gray-700 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+    </button>
+
     <div class="max-w-4xl w-full">
         <div id="quote-container" class="relative text-center">
             <div class="quote-wrapper relative inline-block">
                 <p id="quote" class="quote-text mb-4 leading-relaxed"></p>
-                <button id="info-button" class="hidden ml-2 p-2 rounded-full hover:bg-gray-700 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </button>
             </div>
             <p id="explanation" class="hidden mt-6 text-gray-400 text-lg"></p>
         </div>
@@ -48,13 +55,22 @@
     <script>
         const quotes = [
             { 
-                text: "I’m surrounded by idiots",
+                text: "I'm surrounded by idiots",
             },
             { 
                 text: "Dag patatjes",
             },
             {
-                text: "Het kan beter van de stad dan van de dorp komen"
+                text: "`ne rijke mens is iets aorig",
+                explanation: "Rijke mensen doen vaak raar"
+            },
+            {
+                text: "`t kakken gaat voor `t bakken",
+                explanation: "Eerst de natuurlijke behoeften, dan de plichten"
+            },
+            {
+                text: "Het kan beter van een stad dan van een dorp komen",
+                explanation: "It is better for the person with the bigger income to pay for something"
             },
             {
                 text: "Met Paul Willekens hier, dag omatje!",
@@ -69,10 +85,13 @@
                 text: "Onkruid vergaat niet",
             },
             {
+                text: "Met het hoofdkwartier!"
+            },
+            {
                 text: "Geld moet rollen",
             },
             {
-                text: "Daar zijn papa’s voor",
+                text: "Daar zijn papa's voor",
             },
             {
                 text: "Werk gaat voor het meiske",
@@ -84,9 +103,28 @@
                 text: "Buongiorno principessa!",
             },
             {
-                text: "De vuildbak is je beste vriend",
+                text: "You gotta work to live, not live to work"
+            },
+            {
+                text: "De vuilbak is je beste vriend",
+            },
+            {
+                text: "Kermis is een geseling waard",
+                explanation: "You have to be willing to suffer a bit to get something fun"
+            },
+            {
+                text: "Je moet zo stil zijn dat ze je vergeten",
+                explanation: "For kids at bed time that want to stay past their bed time."
             }
         ];
+
+        let isAnimating = false;
+
+        document.getElementById('refresh-button').addEventListener('click', () => {
+            if (!isAnimating) {
+                displayNextQuote();
+            }
+        });
 
         const quoteElement = document.getElementById('quote');
         const explanationElement = document.getElementById('explanation');
@@ -119,6 +157,7 @@
         }
 
         async function typeWriter(element, text, fontSize, speed = 50) {
+            isAnimating = true; 
             element.style.fontSize = `${fontSize}px`;
             element.innerHTML = '"';
             const cursor = document.createElement('span');
@@ -136,36 +175,40 @@
             await new Promise(resolve => setTimeout(resolve, speed));
             cursor.remove();
             element.innerHTML = '"' + text + '"';
+            isAnimating = false;
         }
 
-        async function displayRandomQuote() {
-            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        function getNextQuoteIndex() {
+            const storedIndex = localStorage.getItem('currentQuoteIndex');
+            const currentIndex = storedIndex !== null ? parseInt(storedIndex) : -1;
+            const nextIndex = (currentIndex + 1) % quotes.length;
+            localStorage.setItem('currentQuoteIndex', nextIndex.toString());
+            console.log(storedIndex, currentIndex, nextIndex);
+            return nextIndex;
+        }
+
+        async function displayNextQuote() {
+            const nextIndex = getNextQuoteIndex();
+            const nextQuote = quotes[nextIndex];
+            
             quoteElement.classList.remove('visible');
             infoButton.classList.add('hidden');
             explanationElement.classList.add('hidden');
             
-            const fontSize = calculateOptimalFontSize(randomQuote.text);
-            await typeWriter(quoteElement, randomQuote.text, fontSize);
+            const fontSize = calculateOptimalFontSize(nextQuote.text);
+            await typeWriter(quoteElement, nextQuote.text, fontSize);
             
-            if (randomQuote.explanation) {
+            if (nextQuote.explanation) {
                 infoButton.classList.remove('hidden');
                 infoButton.onclick = () => {
                     explanationElement.classList.toggle('hidden');
                 };
-                explanationElement.textContent = randomQuote.explanation;
+                explanationElement.textContent = nextQuote.explanation;
             }
         }
 
-        // Initialize pull-to-refresh
-        PullToRefresh.init({
-            mainElement: 'body',
-            onRefresh() {
-                displayRandomQuote();
-            }
-        });
-
         // Display initial quote
-        displayRandomQuote();
+        displayNextQuote();
 
         // Recalculate on window resize
         window.addEventListener('resize', () => {
